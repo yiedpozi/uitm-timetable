@@ -167,7 +167,7 @@ class Timetable {
                 preg_match_all('/<td>(.*?)<\/td>/si', $rows[0][$i], $column);
 
                 // Include result only if group is same with specified on parameter
-                if ($group && $this->format_column($column[0][0]) == $group) {
+                if ($group && strtolower($this->format_column($column[0][0])) == strtolower($group)) {
                     $result[$i]['subject'] = $subject;
                     $result[$i]['group'] = $this->format_column($column[0][0]);
                     $result[$i]['start'] = $this->format_column($column[0][1]);
