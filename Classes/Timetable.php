@@ -29,18 +29,20 @@ class Timetable {
         $result = '';
         $timetable = $this->generate();
 
+        if (empty($timetable)) {
+            return false;
+        }
+
         $result = "<strong>📚 TIMETABLE</strong>\n\n";
 
-        if (!empty($timetable)) {
-            foreach ($timetable as $days => $schedules) {
-                $result .= "<strong>📅 ".strtoupper($days)."</strong>\n";
+        foreach ($timetable as $days => $schedules) {
+            $result .= "<strong>📅 ".strtoupper($days)."</strong>\n";
 
-                foreach ($schedules as $schedule) {
-                    $result .= $schedule["subject"]." 🕛 ".$schedule["start"]." - ".$schedule['end']."\n";
-                }
-
-                $result .= "\n";
+            foreach ($schedules as $schedule) {
+                $result .= $schedule["subject"]." 🕛 ".$schedule["start"]." - ".$schedule['end']."\n";
             }
+
+            $result .= "\n";
         }
 
         return $result;

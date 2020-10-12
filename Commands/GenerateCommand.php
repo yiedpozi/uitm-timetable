@@ -59,7 +59,6 @@ class GenerateCommand extends UserCommand {
                 // If user does not enter any input, start from this
                 if ($text === '') {
                     $notes['state'] = 0;
-
                     $this->conversation->update();
 
                     $faculties_list = include './faculties_list.php';
@@ -76,18 +75,38 @@ class GenerateCommand extends UserCommand {
                 }
 
                 // If user already enter input, get current text and go to next step
-                $notes['faculty'] = substr($text, 0, 2);
+                // Check if faculty ID entered by user is in full format (IS - FAKULTI PENGURUSAN MAKLUMAT)
+                // If followed full format, get first 2 letter
+                // 
+                if (strlen($text) > 2 && substr($text, 2, 3) == ' - ') {
+                    $notes['faculty'] = substr($text, 0, 2);
+                } elseif (strlen($text) == 2) {
+                    $notes['faculty'] = $text;
+                } else {
+                    $data['text'] = 'Wrong faculty input format. Please enter faculty ID (eg: IS for Fakulti Pengurusan Maklumat) or choose from list provided.';
+                    $result = Request::sendMessage($data);
+
+                    $this->conversation->stop();
+
+                    return $result;
+                }
+
                 $text = '';
 
             case 1:
                 if ($text === '') {
-                    $notes['state'] = 1;
-
-                    $this->conversation->update();
-
+                    // Check if subjects found based on faculty ID
                     if (!$subjects = $this->get_subject($notes['faculty'])) {
-                        break;
+                        $data['text'] = 'Sorry, there are no faculty found based on your input.';
+                        $result = Request::sendMessage($data);
+
+                        $this->conversation->stop();
+
+                        return $result;
                     }
+
+                    $notes['state'] = 1;
+                    $this->conversation->update();
 
                     $data['text'] = "📕 Subjects List\n\n";
                     $data['text'] .= "```\n";
@@ -118,7 +137,6 @@ class GenerateCommand extends UserCommand {
 
                     $data['parse_mode'] = 'html';
                     $result = Request::sendMessage($data);
-
                     break;
                 }
 
@@ -133,10 +151,15 @@ class GenerateCommand extends UserCommand {
 
                 $this->conversation->stop();
 
-                $data['text'] = $timetable;
-                $data['parse_mode'] = 'html';
-                $result = Request::sendMessage($data);
+                if (!empty($timetable)) {
+                    $data['text'] = $timetable;
+                    $data['parse_mode'] = 'html';
+                    $result = Request::sendMessage($data);
+                    break;
+                }
 
+                $data['text'] = 'Sorry, there are no timetable found based on your input. Please use correct data based on format provided.';
+                $result = Request::sendMessage($data);
                 break;
 
         }
