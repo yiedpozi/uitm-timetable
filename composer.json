@@ -1,0 +1,15 @@
+{
+    "name": "uitm-timetable/uitm-timetable",
+    "type": "project",
+    "require": {
+        "php": ">=5.5",
+        "longman/telegram-bot": "*",
+        "jakezatecky/array_group_by": "^2.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Yiedpozi\\UitmTimetable\\": "Classes/"
+        },
+        "files": ["functions.php"]
+    }
+}
