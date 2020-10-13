@@ -154,7 +154,7 @@ class Icress {
 
         // If file not exist, get data from ICReSS site
         if (!$data) {
-            $url   = "{$this->icress_url}/jadual/jadual.asp";
+            $url  = "{$this->icress_url}/{$campus_id}/{$campus_id}.html";
             $regex = '/<a href.*?>(.*?)<\/a>/si';
             $data  = $this->put_data($filename, $url, $regex);
         }
