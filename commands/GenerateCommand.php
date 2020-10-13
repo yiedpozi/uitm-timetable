@@ -9,6 +9,7 @@ use Longman\TelegramBot\Entities\ServerResponse;
 use Longman\TelegramBot\Request;
 use Longman\TelegramBot\ChatAction;
 use Yiedpozi\UitmTimetable\Timetable;
+use Yiedpozi\UitmTimetable\Icress;
 
 class GenerateCommand extends UserCommand {
 
@@ -74,12 +75,12 @@ class GenerateCommand extends UserCommand {
                 }
 
                 // If user already enter input, get current text and go to next step
-                // Check if campus ID entered by user is in full format (IS - FAKULTI PENGURUSAN MAKLUMAT)
+                // Check if campus ID entered by user is in full format (KK-KAMPUS SABAH)
                 // If followed full format, get first 2 letter
                 // Special case for Selangor campus
                 if (strtolower($text) == 'kampus selangor' || strlen($text) == 2) {
                     $notes['campus'] = strtolower($text);
-                } elseif (strlen($text) > 2 && substr($text, 2, 3) == ' - ') {
+                } elseif (strlen($text) > 2 && substr($text, 2, 1) == '-') {
                     $notes['campus'] = substr($text, 0, 2);
                 } else {
                     $data['text'] = 'Wrong campus input format. Please enter campus ID, eg; MA or MA-(UiTM Kelantan [HEA/JW/05-2007), or choose from list provided.';
