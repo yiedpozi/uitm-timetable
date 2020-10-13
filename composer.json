@@ -8,7 +8,7 @@
     },
     "autoload": {
         "psr-4": {
-            "Yiedpozi\\UitmTimetable\\": "Classes/"
+            "Yiedpozi\\UitmTimetable\\": "classes/"
         },
         "files": ["functions.php"]
     }
