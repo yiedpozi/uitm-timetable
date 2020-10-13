@@ -11,7 +11,7 @@
             "Yiedpozi\\UitmTimetable\\": "classes/"
         },
         "files": [
-            "functions/misc.php",
+            "functions/misc.php"
         ]
     }
 }
