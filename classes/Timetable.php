@@ -2,8 +2,6 @@
 
 namespace Yiedpozi\UitmTimetable;
 
-$GLOBALS['config'] = require __DIR__ . '/../config.php';
-
 class Timetable {
 
     private $faculty_id;

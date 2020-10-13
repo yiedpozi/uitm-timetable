@@ -2,7 +2,7 @@
 
 namespace Yiedpozi\UitmTimetable;
 
-$GLOBALS['config'] = require __DIR__ . '/../config.php';
+use Yiedpozi\UitmTimetable\Request;
 
 class Icress {
 
@@ -56,9 +56,9 @@ class Icress {
     // Get timetable for specified subject and group
     private function get($campus_id, $subject, $group) {
 
-        $response = file_get_contents("{$this->icress_url}/{$campus_id}/{$subject}.html");
+        list($code, $response) = Request::get("{$this->icress_url}/{$campus_id}/{$subject}.html");
 
-        if (!$http_response_header) {
+        if ($code !== 200) {
             return;
         }
 
@@ -236,27 +236,27 @@ class Icress {
 
     private function put_data($filename, $url, $regex = NULL, $strip_tags = true) {
 
-        $data = file_get_contents($url);
+        list($code, $response) = Request::get($url);
 
-        if (!$http_response_header) {
+        if ($code !== 200) {
             return false;
         }
 
         // In case we need to use regex to format the data received from ICReSS site
         if ($regex) {
-            preg_match_all($regex, $data, $result);
+            preg_match_all($regex, $response, $result);
 
             // Format data received from the page (remove HTML tag)
             if ($strip_tags) {
-                $data = array_map(function($value) {
+                $response = array_map(function($value) {
                     return strip_tags($value);
                 }, $result[0]);
             }
         }
 
-        file_put_contents('./data/'.$filename, json_encode($data));
+        file_put_contents('./data/'.$filename, json_encode($response));
 
-        return $data;
+        return $response;
 
     }
 
