@@ -10,6 +10,8 @@
         "psr-4": {
             "Yiedpozi\\UitmTimetable\\": "classes/"
         },
-        "files": ["functions.php"]
+        "files": [
+            "functions/misc.php",
+        ]
     }
 }
