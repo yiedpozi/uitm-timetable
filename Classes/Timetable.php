@@ -59,6 +59,11 @@ class Timetable {
                 list($subject, $group) = explode('|', $subject);
             }
 
+            // Skip if doesn't have group specified
+            if (!$group) {
+                continue;
+            }
+
             $faculty_id = $this->get_faculty_id($subject);
 
             $data = $this->get($faculty_id, $subject, $group);
@@ -66,8 +71,14 @@ class Timetable {
             if ($data) {
                 $result = array_merge($result, $data);
             }
+
+            // Sort by class start time
+            usort($result, function($a, $b) {
+                return (strtotime($a['start']) > strtotime($b['start']));
+            });
         }
 
+        // Group and sort by day
         $result = array_group_by($result, 'day');
         array_reorder_keys($result, 'Monday,Tuesday,Wednesday,Thursday,Friday,Saturday,Sunday');
 
@@ -131,7 +142,7 @@ class Timetable {
     }
 
     // Get timetable for specified subject and group
-    private function get($faculty_id, $subject, $group = NULL) {
+    private function get($faculty_id, $subject, $group) {
 
         $url = "{$this->icress_url}/{$faculty_id}/{$subject}.html";
 
@@ -167,7 +178,7 @@ class Timetable {
                 preg_match_all('/<td>(.*?)<\/td>/si', $rows[0][$i], $column);
 
                 // Include result only if group is same with specified on parameter
-                if ($group && strtolower($this->format_column($column[0][0])) == strtolower($group)) {
+                if (strtolower($this->format_column($column[0][0])) == strtolower($group)) {
                     $result[$i]['subject'] = $subject;
                     $result[$i]['group'] = $this->format_column($column[0][0]);
                     $result[$i]['start'] = $this->format_column($column[0][1]);
