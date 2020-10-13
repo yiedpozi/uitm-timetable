@@ -97,7 +97,7 @@ class GenerateCommand extends UserCommand {
                 if ($text === '') {
                     // Check if subjects found based on campus ID
                     if (!$subjects = (new Icress())->get_subjects($notes['campus'])) {
-                        $data['text'] = 'Sorry, there are no campus found based on your input.';
+                        $data['text'] = 'Sorry, there are no subjects found based on your input.';
                         $result = Request::sendMessage($data);
 
                         $this->conversation->stop();
@@ -107,25 +107,6 @@ class GenerateCommand extends UserCommand {
 
                     $notes['state'] = 1;
                     $this->conversation->update();
-
-                    $data['text'] = "📕 Subjects List\n\n";
-                    $data['text'] .= "```\n";
-
-                    $i = 0;
-                    foreach ($subjects as $subject) {
-                        // Break line every 3 subject
-                        if ($i && $i % 3 == 0) {
-                            $data['text'] .= "|\n";
-                        }
-                        $data['text'] .= '| '.str_pad($subject, 9, ' ', STR_PAD_BOTH);
-
-                        $i++;
-                    }
-
-                    $data['text'] .= '|```';
-
-                    $data['parse_mode'] = 'Markdown';
-                    Request::sendMessage($data);
 
                     $data['text'] = "👇👇👇👇👇👇👇👇👇👇👇👇👇👇👇👇\n\n".
                                     "Enter your subject and group using this format:\n\n".
