@@ -100,20 +100,9 @@ class Timetable {
             return json_decode(file_get_contents("./data/{$this->pb_faculty_id}.dat"), true);
         }
 
-        $url = "{$this->icress_url}/{$this->pb_faculty_id}/{$this->pb_faculty_id}.html";
+        $response = file_get_contents("{$this->icress_url}/{$this->pb_faculty_id}/{$this->pb_faculty_id}.html");
 
-        $ch = curl_init();
-        curl_setopt($ch, CURLOPT_URL, $url);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
-        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-
-        $response = curl_exec($ch);
-        $status   = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        $is_error = curl_error($ch);
-        curl_close($ch);
-
-        if ($status !== 200) {
+        if (!$http_response_header) {
             return;
         }
 
@@ -137,20 +126,9 @@ class Timetable {
     // Get timetable for specified subject and group
     private function get($faculty_id, $subject, $group) {
 
-        $url = "{$this->icress_url}/{$faculty_id}/{$subject}.html";
+        $response = file_get_contents("{$this->icress_url}/{$faculty_id}/{$subject}.html");
 
-        $ch = curl_init();
-        curl_setopt($ch, CURLOPT_URL, $url);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
-        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-
-        $response = curl_exec($ch);
-        $status   = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        $is_error = curl_error($ch);
-        curl_close($ch);
-
-        if ($status !== 200) {
+        if (!$http_response_header) {
             return;
         }
 
