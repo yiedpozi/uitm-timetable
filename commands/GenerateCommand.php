@@ -61,11 +61,10 @@ class GenerateCommand extends UserCommand {
                     $notes['state'] = 0;
                     $this->conversation->update();
 
-                    $faculties_list = include './faculties_list.php';
+                    $campuses  = (new Icress())->get_campuses();
+                    $keyboards = new Keyboard(...$campuses);
 
-                    $keyboards = new Keyboard(...$faculties_list);
-
-                    $data['text'] = 'Select your faculty.';
+                    $data['text'] = 'Select your campus.';
                     $data['reply_markup'] = $keyboards->setResizeKeyboard(true)
                                                       ->setOneTimeKeyboard(true)
                                                       ->setSelective(false);
@@ -75,15 +74,15 @@ class GenerateCommand extends UserCommand {
                 }
 
                 // If user already enter input, get current text and go to next step
-                // Check if faculty ID entered by user is in full format (IS - FAKULTI PENGURUSAN MAKLUMAT)
+                // Check if campus ID entered by user is in full format (IS - FAKULTI PENGURUSAN MAKLUMAT)
                 // If followed full format, get first 2 letter
-                // 
-                if (strlen($text) > 2 && substr($text, 2, 3) == ' - ') {
-                    $notes['faculty'] = substr($text, 0, 2);
-                } elseif (strlen($text) == 2) {
-                    $notes['faculty'] = $text;
+                // Special case for Selangor campus
+                if (strtolower($text) == 'kampus selangor' || strlen($text) == 2) {
+                    $notes['campus'] = strtolower($text);
+                } elseif (strlen($text) > 2 && substr($text, 2, 3) == ' - ') {
+                    $notes['campus'] = substr($text, 0, 2);
                 } else {
-                    $data['text'] = 'Wrong faculty input format. Please enter faculty ID (eg: IS for Fakulti Pengurusan Maklumat) or choose from list provided.';
+                    $data['text'] = 'Wrong campus input format. Please enter campus ID, eg; MA or MA-(UiTM Kelantan [HEA/JW/05-2007), or choose from list provided.';
                     $result = Request::sendMessage($data);
 
                     $this->conversation->stop();
@@ -95,9 +94,9 @@ class GenerateCommand extends UserCommand {
 
             case 1:
                 if ($text === '') {
-                    // Check if subjects found based on faculty ID
-                    if (!$subjects = $this->get_subject($notes['faculty'])) {
-                        $data['text'] = 'Sorry, there are no faculty found based on your input.';
+                    // Check if subjects found based on campus ID
+                    if (!$subjects = (new Icress())->get_subjects($notes['campus'])) {
+                        $data['text'] = 'Sorry, there are no campus found based on your input.';
                         $result = Request::sendMessage($data);
 
                         $this->conversation->stop();
@@ -147,7 +146,7 @@ class GenerateCommand extends UserCommand {
                 $this->conversation->update();
                 unset($notes['state']);
 
-                $timetable = (new Timetable($user_id, $notes['faculty'], $notes['subjects']))->generate_html();
+                $timetable = (new Timetable($notes['campus'], $notes['subjects']))->generate_html();
 
                 $this->conversation->stop();
 
@@ -165,39 +164,6 @@ class GenerateCommand extends UserCommand {
         }
 
         return $result;
-
-    }
-
-    private function get_faculties_list() {
-        return include './faculties_list.php';
-    }
-
-    private function get_subject($faculty_id) {
-
-        $url = "http://icress.uitm.edu.my/jadual/{$faculty_id}/{$faculty_id}.html";
-
-        $ch = curl_init();
-        curl_setopt($ch, CURLOPT_URL, $url);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
-        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-
-        $response = curl_exec($ch);
-        $status   = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        $is_error = curl_error($ch);
-        curl_close($ch);
-
-        if ($status !== 200) {
-            return;
-        }
-
-        preg_match_all('/<a href.*?>(.*?)<\/a>/si', $response, $url);
-
-        $subjects = array_map(function($subject) {
-            return strip_tags($subject);
-        }, $url[0]);
-
-        return $subjects;
 
     }
 

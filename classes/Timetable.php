@@ -4,21 +4,13 @@ namespace Yiedpozi\UitmTimetable;
 
 $GLOBALS['config'] = require __DIR__ . '/../config.php';
 
-use Dompdf\Dompdf;
-
 class Timetable {
 
-    private $icress_url = 'http://icress.uitm.edu.my/jadual';
-
-    private $user_id;
     private $faculty_id;
     private $subjects;
 
-    private $pb_faculty_id = 'PB';
+    public function __construct($faculty_id, array $subjects) {
 
-    public function __construct($user_id, $faculty_id, array $subjects) {
-
-        $this->user_id    = $user_id;
         $this->faculty_id = $faculty_id;
         $this->subjects   = $subjects;
 
@@ -27,7 +19,7 @@ class Timetable {
     public function generate_html() {
 
         $result = '';
-        $timetable = $this->generate();
+        $timetable = (new Icress())->all($this->faculty_id, $this->subjects);
 
         if (empty($timetable)) {
             return false;
@@ -47,127 +39,6 @@ class Timetable {
 
         return $result;
 
-    }
-
-    // Generate timetable for all specified subjects and groups
-    private function generate() {
-
-        $result = [];
-        foreach ($this->subjects as $subject) {
-            $group = NULL;
-            if (strpos($subject, '|')) {
-                list($subject, $group) = explode('|', $subject);
-            }
-
-            // Skip if doesn't have group specified
-            if (!$group) {
-                continue;
-            }
-
-            $data = $this->get($this->faculty_id, $subject, $group);
-
-            // We find Pengajian Bahasa subject on faculty specified by user first
-            // If not found, find it on Pengajian Bahasa faculty
-            $pb_subjects = $this->get_pb_subjects();
-            if (!$data && in_array($subject, $pb_subjects)) {
-
-                // If Akademi Pengajian Bahasa subject, return PB (Pengajian Bahasa) as faculty ID
-                $data = $this->get($this->pb_faculty_id, $subject, $group);
-            }
-
-            if ($data) {
-                $result = array_merge($result, $data);
-            }
-
-            // Sort by class start time
-            usort($result, function($a, $b) {
-                return (strtotime($a['start']) > strtotime($b['start']));
-            });
-        }
-
-        // Group and sort by day
-        $result = array_group_by($result, 'day');
-        array_reorder_keys($result, 'Monday,Tuesday,Wednesday,Thursday,Friday,Saturday,Sunday');
-
-        return $result;
-
-    }
-
-    private function get_pb_subjects() {
-
-        // If already cache
-        if (file_exists("./data/{$this->pb_faculty_id}.dat")) {
-            return json_decode(file_get_contents("./data/{$this->pb_faculty_id}.dat"), true);
-        }
-
-        $response = file_get_contents("{$this->icress_url}/{$this->pb_faculty_id}/{$this->pb_faculty_id}.html");
-
-        if (!$http_response_header) {
-            return;
-        }
-
-        // Get links, then get each rows
-        preg_match_all('/<a href.*?>(.*?)<\/a>/si', $response, $links);
-
-        $result = [];
-
-        if (!empty($links[0])) {
-            foreach ($links[0] as $link) {
-                $result[] = strip_tags($link);
-            }
-        }
-
-        file_put_contents("./data/{$this->pb_faculty_id}.dat", json_encode($result));
-
-        return $result;
-
-    }
-
-    // Get timetable for specified subject and group
-    private function get($faculty_id, $subject, $group) {
-
-        $response = file_get_contents("{$this->icress_url}/{$faculty_id}/{$subject}.html");
-
-        if (!$http_response_header) {
-            return;
-        }
-
-        // Get table, then get each rows
-        preg_match_all('/<table.*?>(.*?)<\/table>/si', $response, $table);
-        preg_match_all('/<tr>(.*?)<\/tr>/si', implode('', $table[0]), $rows);
-
-        // Remove table header
-        unset($rows[0][0]);
-
-        // Re-arrange array index
-        $rows[0] = array_values($rows[0]);
-
-        $result = [];
-
-        if (count($rows[0]) > 0) {
-            for ($i=0; $i < count($rows[0]); $i++) {
-                preg_match_all('/<td>(.*?)<\/td>/si', $rows[0][$i], $column);
-
-                // Include result only if group is same with specified on parameter
-                if (strtolower($this->format_column($column[0][0])) == strtolower($group)) {
-                    $result[$i]['subject'] = $subject;
-                    $result[$i]['group'] = $this->format_column($column[0][0]);
-                    $result[$i]['start'] = $this->format_column($column[0][1]);
-                    $result[$i]['end'] = $this->format_column($column[0][2]);
-                    $result[$i]['day'] = $this->format_column($column[0][3]);
-                    $result[$i]['mode'] = $this->format_column($column[0][4]);
-                    $result[$i]['status'] = $this->format_column($column[0][5]);
-                    $result[$i]['room'] = $this->format_column($column[0][6]);
-                }
-            }
-        }
-
-        return $result;
-
-    }
-
-    private function format_column($data) {
-        return str_replace("\r\n", ' ', trim(strip_tags($data)));
     }
 
 }
