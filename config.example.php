@@ -3,7 +3,7 @@
 return array(
     'token'        => 'your_token_here',
     'username'     => 'your_bot_username',
-    'command_path' => __DIR__ . '/Commands',
+    'command_path' => __DIR__ . '/commands',
     'webhook_url'  => 'your_webhook_url',
     'pdf_folder'   => 'pdf/',
 
