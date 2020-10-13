@@ -64,9 +64,16 @@ class Timetable {
                 continue;
             }
 
-            $faculty_id = $this->get_faculty_id($subject);
+            $data = $this->get($this->faculty_id, $subject, $group);
 
-            $data = $this->get($faculty_id, $subject, $group);
+            // We find Pengajian Bahasa subject on faculty specified by user first
+            // If not found, find it on Pengajian Bahasa faculty
+            $pb_subjects = $this->get_pb_subjects();
+            if (!$data && in_array($subject, $pb_subjects)) {
+
+                // If Akademi Pengajian Bahasa subject, return PB (Pengajian Bahasa) as faculty ID
+                $data = $this->get($this->pb_faculty_id, $subject, $group);
+            }
 
             if ($data) {
                 $result = array_merge($result, $data);
@@ -83,20 +90,6 @@ class Timetable {
         array_reorder_keys($result, 'Monday,Tuesday,Wednesday,Thursday,Friday,Saturday,Sunday');
 
         return $result;
-
-    }
-
-    // Get faculty ID based on subject
-    private function get_faculty_id($subject) {
-
-        $pb_subjects = $this->get_pb_subjects();
-
-        // If Akademi Pengajian Bahasa subject, return PB (Pengajian Bahasa) as faculty ID
-        if (in_array($subject, $pb_subjects)) {
-            return $this->pb_faculty_id;
-        }
-
-        return $this->faculty_id;
 
     }
 
