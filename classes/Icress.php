@@ -2,6 +2,8 @@
 
 namespace Yiedpozi\UitmTimetable;
 
+require __DIR__ . '/../config.php';
+
 use Yiedpozi\UitmTimetable\Request;
 
 class Icress {
@@ -10,6 +12,12 @@ class Icress {
 
     // Credits to https://github.com/afzafri/UiTM-Timetable-Generator
     private $non_selangor_campus_ids = array('AR', 'SI', 'JK', 'MA', 'SG', 'SP', 'AG', 'KP', 'BT', 'SA', 'KK', 'DU');
+
+    private $config;
+
+    public function __construct() {
+        $this->config = require __DIR__ . '/../config.php';
+    }
 
     // Get timetable for all specified subjects and groups
     public function all($campus_id, array $subjects) {
@@ -147,7 +155,7 @@ class Icress {
 
         }
 
-        file_put_contents('./data/SELANGOR_FACULTIES.dat', json_encode($selangor));
+        file_put_contents("{$this->config['folder_path']['data']}/SELANGOR_FACULTIES.dat", json_encode($selangor));
 
         // Add Selangor in list because current $campuses array exclude all selangor faculties
         $campuses[] = 'KAMPUS SELANGOR';
@@ -258,7 +266,7 @@ class Icress {
             }, $result[0]);
         }
 
-        file_put_contents('./data/'.$filename, json_encode($subjects_referrer));
+        file_put_contents($this->config['folder_path']['data'].'/'.$filename, json_encode($subjects_referrer));
 
         return $subjects_referrer;
 
@@ -266,8 +274,10 @@ class Icress {
 
     private function get_data($filename) {
 
-        if (file_exists('./data/'.$filename)) {
-            return json_decode(file_get_contents('./data/'.$filename), true);
+        $path = $this->config['folder_path']['data'].'/'.$filename;
+
+        if (file_exists($path) || !$this->is_file_expired($filename)) {
+            return json_decode(file_get_contents($path), true);
         }
 
         return false;
@@ -294,9 +304,18 @@ class Icress {
             }
         }
 
-        file_put_contents('./data/'.$filename, json_encode($response));
+        file_put_contents($this->config['folder_path']['data'].'/'.$filename, json_encode($response));
 
         return $response;
+
+    }
+
+    private function is_file_expired($filename) {
+
+        $file = $this->config['folder_path']['data'].'/'.$filename;
+        $expires = $this->config['cache_expires'] ?: 3600;
+
+        return filemtime($file) < (time() - $expires);
 
     }
 

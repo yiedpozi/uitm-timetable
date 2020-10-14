@@ -6,7 +6,7 @@ $config = require __DIR__ . '/config.php';
 try {
 
     $telegram = new Longman\TelegramBot\Telegram($config['token'], $config['username']);
-    $telegram->addCommandsPath($config['command_path']);
+    $telegram->addCommandsPath($config['folder_path']['command']);
     $telegram->enableMySql($config['mysql']);
     $telegram->handle();
 
