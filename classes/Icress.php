@@ -116,17 +116,17 @@ class Icress {
     public function get_campuses() {
 
         $filename = 'FACULTIES.dat';
-        $data = $this->get_data($filename);
+        $faculties = $this->get_data($filename);
 
         // If file not exist, get data from ICReSS site
-        if (!$data) {
+        if (!$faculties) {
             $url   = "{$this->icress_url}/jadual/jadual.asp";
             $regex = '/<option value.*?>(.*?)<\/option>/si';
 
-            $data = $this->put_data($filename, $url, $regex);
+            $faculties = $this->put_data($filename, $url, $regex);
         }
 
-        if (!$data) {
+        if (!$faculties) {
             return false;
         }
 
@@ -134,15 +134,15 @@ class Icress {
         $selangor = [];
 
         // Credits to https://github.com/afzafri/UiTM-Timetable-Generator for the logic
-        foreach ($data as $campus) {
-            $campus_id = substr($campus, 0, 2);
+        foreach ($faculties as $faculty) {
+            $faculty_id = substr($faculty, 0, 2);
 
-            if (in_array($campus_id, $this->non_selangor_campus_ids)) {
+            if (in_array($faculty_id, $this->non_selangor_campus_ids)) {
                 // Non-selangor campus
-                $campuses[] = strtoupper($campus);
+                $campuses[] = strtoupper($faculty);
             } else {
                 // For selangor campus, we only store the ID, so we only check for the ID later
-                $selangor[] = strtoupper($campus_id);
+                $selangor[] = strtoupper($faculty_id);
             }
 
         }
@@ -164,25 +164,23 @@ class Icress {
         }
 
         $filename = $campus_id.'.dat';
-        $data = $this->get_data($filename);
+        $subjects = $this->get_data($filename);
 
         // If file not exist, get data from ICReSS site
-        if (!$data) {
+        if (!$subjects) {
             $url  = "{$this->icress_url}/{$campus_id}/{$campus_id}.html";
             $regex = '/<a href.*?>(.*?)<\/a>/si';
 
-            $data = $this->put_data($filename, $url, $regex);
+            $subjects = $this->put_data($filename, $url, $regex);
         }
 
-        if (!$data) {
+        if (!$subjects) {
             return false;
         }
 
-        $subjects = array_map(function($subject) {
+        return array_map(function($subject) {
             return strip_tags($subject);
-        }, $data);
-
-        return $subjects;
+        }, $subjects);
 
     }
 
@@ -196,18 +194,18 @@ class Icress {
         // Go through each faculty, get the subjects
         foreach ($selangor_faculties as $faculty_id) {
             $filename = $faculty_id.'.dat';
-            $data = $this->get_data($filename);
+            $faculty = $this->get_data($filename);
 
             // If file not exist, get data from ICReSS site
-            if (!$data) {
+            if (!$faculty) {
                 $url  = "{$this->icress_url}/{$faculty_id}/{$faculty_id}.html";
                 $regex = '/<a href.*?>(.*?)<\/a>/si';
 
-                $data = $this->put_data($filename, $url, $regex);
+                $faculty = $this->put_data($filename, $url, $regex);
             }
 
-            if ($data) {
-                $subjects[$faculty_id] = $data;
+            if ($faculty) {
+                $subjects[$faculty_id] = $faculty;
             }
         }
 
@@ -220,12 +218,13 @@ class Icress {
 
         // We will check if we already store list of faculties for Selangor campuses
         // If not exist, we will get it from ICReSS first
-        $filename = './data/SELANGOR_FACULTIES.dat';
-        if (!file_exists($filename)) {
-            $this->get_campuses();
+        $faculties = $this->get_data('SELANGOR_FACULTIES.dat');
+
+        if (!$faculties) {
+            return $this->get_campuses();
         }
 
-        return json_decode(file_get_contents($filename), true);
+        return $faculties;
 
     }
 
@@ -234,10 +233,10 @@ class Icress {
 
         // We will check if we already store list of faculties with available subjects for Selangor campuses
         $filename = 'SELANGOR_REFERRER.dat';
-        $data = $this->get_data($filename);
+        $subjects_referrer = $this->get_data($filename);
 
-        if ($data) {
-            return $data;
+        if ($subjects_referrer) {
+            return $subjects_referrer;
         }
 
         $faculties = $this->get_selangor_faculties();
