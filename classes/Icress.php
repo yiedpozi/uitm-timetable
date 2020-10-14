@@ -155,7 +155,11 @@ class Icress {
 
         }
 
-        file_put_contents("{$this->config['folder_path']['data']}/SELANGOR_FACULTIES.dat", json_encode($selangor));
+        $filename = 'SELANGOR_FACULTIES.dat';
+        $path = $this->config['folder_path']['data'].'/'.$filename;
+        if (!file_exists($path) || $this->is_file_expired($filename)) {
+            file_put_contents($path, json_encode($selangor));
+        }
 
         // Add Selangor in list because current $campuses array exclude all selangor faculties
         $campuses[] = 'KAMPUS SELANGOR';
@@ -266,7 +270,10 @@ class Icress {
             }, $result[0]);
         }
 
-        file_put_contents($this->config['folder_path']['data'].'/'.$filename, json_encode($subjects_referrer));
+        $path = $this->config['folder_path']['data'].'/'.$filename;
+        if (!file_exists($path) || $this->is_file_expired($filename)) {
+            file_put_contents($path, json_encode($subjects_referrer));
+        }
 
         return $subjects_referrer;
 
