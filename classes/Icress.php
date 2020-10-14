@@ -188,12 +188,10 @@ class Icress {
     }
 
     // Get Selangor subjects
-    // PI - Pusat Pemikiran Dan Kefahaman Islam
-    // PB - Akademi Pengajian Bahasa
-    // HP - Bahagian Hal Ehwal Pelajar (Co-Curriculum)
-    // Special case as for other campuses, PI, PB and HP subjects already appeared on their faculty
     private function get_selangor_subjects() {
 
+        // We will check if we already store list of faculties for Selangor campuses
+        // If not exist, we will get it from ICReSS first
         $filename = './data/SELANGOR_FACULTIES.dat';
         if (!file_exists($filename)) {
             $this->get_campuses();
