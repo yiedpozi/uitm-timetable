@@ -28,16 +28,29 @@ class Icress {
                 continue;
             }
 
-            // For Selangor campus, PI, PB and HP subjects can be retrieved by using
-            if (strtolower($campus_id) == 'kampus selangor' && $selangor_faculty_id = $this->get_selangor_faculty_by_subject($subject)) {
-                $data = $this->get($selangor_faculty_id, $subject, $group);
+            // For Selangor campus, we will check the subjects referrer to get faculty ID
+            if (strtolower($campus_id) == 'kampus selangor') {
+                $selangor_faculties = $this->get_selangor_faculties();
+                $selangor_subjects_referrer = $this->get_selangor_subjects_referrer();
+
+                // We will go through each Selangor faculty to check for the subjects.
+                foreach ($selangor_subjects_referrer as $selangor_faculty_id => $selangor_subjects) {
+                    // If the subject is available on current $selangor_faculty_id,
+                    // we will check ICReSS to check if the specified group is also exists for the specified subject
+                    if (in_array($subject, $selangor_subjects)) {
+                        $data = $this->get($selangor_faculty_id, $subject, $group);
+
+                        // When we found the correct timetable, we will break the loop and continue for next flow.
+                        if ($data) {
+                            break;
+                        }
+                    }
+                }
             } else {
                 $data = $this->get($campus_id, $subject, $group);
             }
 
-            if ($data) {
-                $result = array_merge($result, $data);
-            }
+            $result = array_merge($result, $data);
 
             // Sort by class start time
             usort($result, function($a, $b) {
@@ -102,14 +115,15 @@ class Icress {
 
     public function get_campuses() {
 
-        $filename = 'campuses.dat';
+        $filename = 'FACULTIES.dat';
         $data = $this->get_data($filename);
 
         // If file not exist, get data from ICReSS site
         if (!$data) {
             $url   = "{$this->icress_url}/jadual/jadual.asp";
             $regex = '/<option value.*?>(.*?)<\/option>/si';
-            $data  = $this->put_data($filename, $url, $regex);
+
+            $data = $this->put_data($filename, $url, $regex);
         }
 
         if (!$data) {
@@ -156,7 +170,8 @@ class Icress {
         if (!$data) {
             $url  = "{$this->icress_url}/{$campus_id}/{$campus_id}.html";
             $regex = '/<a href.*?>(.*?)<\/a>/si';
-            $data  = $this->put_data($filename, $url, $regex);
+
+            $data = $this->put_data($filename, $url, $regex);
         }
 
         if (!$data) {
@@ -171,38 +186,15 @@ class Icress {
 
     }
 
-    // Get Selangor faculty by subject
-    private function get_selangor_faculty_by_subject($subject) {
-
-        $selangor_subjects = $this->get_selangor_subjects();
-
-        foreach ($selangor_subjects as $faculty_id => $subjects) {
-            // Search in Selangor subjects array, if has the subject specified, then return the faculty ID
-            if (in_array($subject, $subjects)) {
-                return $faculty_id;
-            }
-        }
-
-        return false;
-
-    }
-
     // Get Selangor subjects
     private function get_selangor_subjects() {
 
-        // We will check if we already store list of faculties for Selangor campuses
-        // If not exist, we will get it from ICReSS first
-        $filename = './data/SELANGOR_FACULTIES.dat';
-        if (!file_exists($filename)) {
-            $this->get_campuses();
-        }
-
-        $selangor_faculty_ids = json_decode(file_get_contents($filename), true);
+        $selangor_faculties = $this->get_selangor_faculties();
 
         $subjects = [];
 
         // Go through each faculty, get the subjects
-        foreach ($selangor_faculty_ids as $faculty_id) {
+        foreach ($selangor_faculties as $faculty_id) {
             $filename = $faculty_id.'.dat';
             $data = $this->get_data($filename);
 
@@ -210,7 +202,8 @@ class Icress {
             if (!$data) {
                 $url  = "{$this->icress_url}/{$faculty_id}/{$faculty_id}.html";
                 $regex = '/<a href.*?>(.*?)<\/a>/si';
-                $data  = $this->put_data($filename, $url, $regex);
+
+                $data = $this->put_data($filename, $url, $regex);
             }
 
             if ($data) {
@@ -219,6 +212,56 @@ class Icress {
         }
 
         return $subjects;
+
+    }
+
+    // Get Selangor faculties
+    private function get_selangor_faculties() {
+
+        // We will check if we already store list of faculties for Selangor campuses
+        // If not exist, we will get it from ICReSS first
+        $filename = './data/SELANGOR_FACULTIES.dat';
+        if (!file_exists($filename)) {
+            $this->get_campuses();
+        }
+
+        return json_decode(file_get_contents($filename), true);
+
+    }
+
+    // Store list of faculties with available subjects for Selangor campuses
+    private function get_selangor_subjects_referrer() {
+
+        // We will check if we already store list of faculties with available subjects for Selangor campuses
+        $filename = 'SELANGOR_REFERRER.dat';
+        $data = $this->get_data($filename);
+
+        if ($data) {
+            return $data;
+        }
+
+        $faculties = $this->get_selangor_faculties();
+        $subjects_referrer = [];
+
+        // If not exist, we will get it from ICReSS first.
+        // We will go through each faculty and get list of subjects.
+        foreach ($faculties as $faculty_id) {
+            list($code, $response) = Request::get("{$this->icress_url}/{$faculty_id}/{$faculty_id}.html");
+
+            if ($code !== 200) {
+                return;
+            }
+
+            preg_match_all('/<a href.*?>(.*?)<\/a>/si', $response, $result);
+
+            $subjects_referrer[$faculty_id] = array_map(function($value) {
+                return strip_tags($value);
+            }, $result[0]);
+        }
+
+        file_put_contents('./data/'.$filename, json_encode($subjects_referrer));
+
+        return $subjects_referrer;
 
     }
 
