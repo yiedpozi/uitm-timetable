@@ -58,6 +58,11 @@ class Icress {
                 $data = $this->get($campus_id, $subject, $group);
             }
 
+            // Check if timetable exists
+            if (empty($data)) {
+                return;
+            }
+
             $result = array_merge($result, $data);
 
             // Sort by class start time
@@ -282,7 +287,6 @@ class Icress {
     private function get_data($filename) {
 
         $path = $this->config['folder_path']['data'].'/'.$filename;
-
         if (file_exists($path) || !$this->is_file_expired($filename)) {
             return json_decode(file_get_contents($path), true);
         }
