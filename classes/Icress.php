@@ -287,7 +287,7 @@ class Icress {
     private function get_data($filename) {
 
         $path = $this->config['folder_path']['data'].'/'.$filename;
-        if (file_exists($path) || !$this->is_file_expired($filename)) {
+        if (file_exists($path) && !$this->is_file_expired($filename)) {
             return json_decode(file_get_contents($path), true);
         }
 
