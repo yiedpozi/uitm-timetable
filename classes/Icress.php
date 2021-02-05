@@ -36,6 +36,9 @@ class Icress {
                 continue;
             }
 
+            // Empty the previous data first to prevent duplicate data when subject not found
+            $data = NULL;
+
             // For Selangor campus, we will check the subjects referrer to get faculty ID
             if (strtolower($campus_id) == 'kampus selangor') {
                 $selangor_faculties = $this->get_selangor_faculties();
@@ -58,9 +61,9 @@ class Icress {
                 $data = $this->get($campus_id, $subject, $group);
             }
 
-            // Check if timetable exists
+            // Skip if timetable for specified subject not found
             if (empty($data)) {
-                return;
+                continue;
             }
 
             $result = array_merge($result, $data);
