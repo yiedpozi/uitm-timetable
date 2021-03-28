@@ -28,7 +28,7 @@ class Icress {
 
             // subject|class
             if (strpos($subject, '|')) {
-                list($subject, $group) = explode('|', $subject);
+                list($subject, $group) = array_map('trim', explode('|', $subject));
             }
 
             // Skip if doesn't have group specified
