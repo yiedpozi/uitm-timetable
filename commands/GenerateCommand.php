@@ -62,7 +62,17 @@ class GenerateCommand extends UserCommand {
                     $notes['state'] = 0;
                     $this->conversation->update();
 
-                    $campuses  = (new Icress())->get_campuses();
+                    $campuses = (new Icress())->get_campuses();
+
+                    if ( !$campuses ) {
+                        $data['text'] = 'Sorry! We are unable to retrieve the data. Please try again.';
+                        $result = Request::sendMessage($data);
+
+                        $this->conversation->stop();
+
+                        return $result;
+                    }
+
                     $keyboards = new Keyboard(...$campuses);
 
                     $data['text'] = 'Select your campus.';
