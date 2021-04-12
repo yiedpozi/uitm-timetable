@@ -26,7 +26,7 @@ class Timetable {
         $result = "<strong>📚 TIMETABLE</strong>\n\n";
 
         foreach ($timetable as $days => $schedules) {
-            $result .= "<strong>📅 ".strtoupper($days)."</strong>\n";
+            $result .= "<strong>🗓 ".strtoupper($days)."</strong>\n";
 
             foreach ($schedules as $schedule) {
                 $result .= $schedule["subject"]." 🕛 ".$schedule["start"]." - ".$schedule['end']."\n";
