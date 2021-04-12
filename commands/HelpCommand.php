@@ -38,6 +38,8 @@ class HelpCommand extends UserCommand {
                         "📚 Timetable\n".
                         "/generate\n\n".
                         "📌 Others\n".
+                        "🔸 Video Tutorial\n".
+                        "https://www.youtube.com/watch?v=4gena9hnpV8\n\n".
                         "/info\n";
 
         $data['parse_mode'] = 'html';

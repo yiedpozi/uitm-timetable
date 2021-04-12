@@ -37,7 +37,8 @@ class StartCommand extends UserCommand {
         $data['text'] = "🎓 UiTM Timetable 🎓\n\n".
                         "📚 Credits to: ICReSS (http://icress.uitm.edu.my)\n".
                         "👍 Powered by https://yiedpozi.my\n\n".
-                        "To get started, type or click / to view list of instructions.";
+                        "To get started, type or click / to view list of instructions.\n\n".
+                        "Video Tutorial: https://www.youtube.com/watch?v=4gena9hnpV8";
 
         $data['parse_mode'] = 'html';
 
